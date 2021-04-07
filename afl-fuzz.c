@@ -986,8 +986,8 @@ static inline u8 has_new_bits(u8* virgin_map) {
 
   if (ret && virgin_map == virgin_bits) bitmap_changed = 1;
 
-  if (unsafe_counter == 0 && ret == 2) {
-    ret = 0;
+  if (unsafe_counter > 0) {
+    ret = 1;
   } 
 
   return ret;

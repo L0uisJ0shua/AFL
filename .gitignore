@@ -18,3 +18,13 @@ afl-llvm-pass.so
 afl-llvm-rt-32.o
 afl-llvm-rt-64.o
 afl-llvm-rt.o
+
+
+afl-analyze.dSYM/
+afl-as.dSYM/
+afl-fuzz.dSYM/
+afl-gcc.dSYM/
+afl-gotcpu.dSYM/
+afl-showmap.dSYM/
+afl-tmin.dSYM/
+test-instr.dSYM/
