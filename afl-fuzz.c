@@ -87,6 +87,12 @@
 #  define EXP_ST static
 #endif /* ^AFL_LIB */
 
+/* [L0J0] Global Value for file handling */
+
+FILE *fp;
+char buffer[1024];
+
+
 /* Lots of globals, but mostly for the status UI and other things where it
    really makes no sense to haul them around as function parameters. */
 
@@ -262,6 +268,9 @@ struct queue_entry {
   u8* trace_mini;                     /* Trace bytes, if kept             */
   u32 tc_ref;                         /* Trace bytes ref count            */
 
+  u64 unsafe_counter;                 /* [L0J0] unsafe counter for test 
+                                      case */
+
   struct queue_entry *next,           /* Next element, if any             */
                      *next_100;       /* 100 elements ahead               */
 
@@ -286,6 +295,7 @@ static u32 extras_cnt;                /* Total number of tokens read      */
 
 static struct extra_data* a_extras;   /* Automatically selected extras    */
 static u32 a_extras_cnt;              /* Total number of tokens available */
+
 
 static u8* (*post_handler)(u8* buf, u32* len);
 
@@ -906,6 +916,13 @@ EXP_ST void read_bitmap(u8* fname) {
 
 static inline u8 has_new_bits(u8* virgin_map) {
 
+  // [L0J0] opens file and read from it to obtain counter value
+  fp = fopen("weight.txt", "r");
+  fread(buffer, 512, 1, fp);
+  fclose(fp);
+
+  u64 unsafe_counter = atoi(buffer);
+
 #ifdef WORD_SIZE_64
 
   u64* current = (u64*)trace_bits;
@@ -968,6 +985,10 @@ static inline u8 has_new_bits(u8* virgin_map) {
   }
 
   if (ret && virgin_map == virgin_bits) bitmap_changed = 1;
+
+  if (unsafe_counter == 0 && ret == 2) {
+    ret = 0;
+  } 
 
   return ret;
 
