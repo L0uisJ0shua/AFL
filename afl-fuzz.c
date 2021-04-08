@@ -917,12 +917,15 @@ EXP_ST void read_bitmap(u8* fname) {
 static inline u8 has_new_bits(u8* virgin_map) {
 
   // [L0J0] opens file and read from it to obtain counter value
-  fp = fopen("/Users/LouisJoshua/Desktop/UResearch/unsafe_identifier/fuzz/lewton_read/weight.txt",
+  fp = fopen("/home/louis/unsafe_rust/unsafe_identifier/fuzz/lewton_read/weight.txt",
              "r+");
   fread(buffer, 512, 1, fp);
-  fputc(48, fp);
   fclose(fp);
-
+  fp = fopen("/home/louis/unsafe_rust/unsafe_identifier/fuzz/lewton_read/weight.txt",
+             "r+");
+  fputs("0", fp);
+  fclose(fp);
+  
   u64 unsafe_counter = atoi(buffer);
 
 #ifdef WORD_SIZE_64
