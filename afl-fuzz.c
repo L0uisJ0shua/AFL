@@ -918,8 +918,9 @@ static inline u8 has_new_bits(u8* virgin_map) {
 
   // [L0J0] opens file and read from it to obtain counter value
   fp = fopen("/Users/LouisJoshua/Desktop/UResearch/unsafe_identifier/fuzz/lewton_read/weight.txt",
-             "r");
+             "r+");
   fread(buffer, 512, 1, fp);
+  fputc(48, fp);
   fclose(fp);
 
   u64 unsafe_counter = atoi(buffer);
@@ -987,7 +988,7 @@ static inline u8 has_new_bits(u8* virgin_map) {
 
   if (ret && virgin_map == virgin_bits) bitmap_changed = 1;
 
-  if (unsafe_counter > 0) {
+  if (unsafe_counter > 0 && ret != 2) {
     ret = 1;
   } 
 
