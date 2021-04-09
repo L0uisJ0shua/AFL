@@ -917,11 +917,11 @@ EXP_ST void read_bitmap(u8* fname) {
 static inline u8 has_new_bits(u8* virgin_map) {
 
   // [L0J0] opens file and read from it to obtain counter value
-  fp = fopen("/home/louis/unsafe_rust/unsafe_identifier/weight.txt",
+  fp = fopen("../weight.txt",
              "r+");
   fread(buffer, 512, 1, fp);
   fclose(fp);
-  fp = fopen("/home/louis/unsafe_rust/unsafe_identifier/weight.txt",
+  fp = fopen("../weight.txt",
              "r+");
   fputs("0", fp);
   fclose(fp);
