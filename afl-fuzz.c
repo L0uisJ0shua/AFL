@@ -3171,18 +3171,7 @@ static void write_crash_readme(void) {
    entry is saved, 0 otherwise. */
 
 static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
-  // [L0J0] opens file and read from it to obtain counter value
-  fp = fopen("../weight.txt",
-             "r+");
-  fread(buffer, 512, 1, fp);
-  fclose(fp);
-  fp = fopen("../weight.txt",
-             "r+");
-  fputs("0", fp);
-  fclose(fp);
-
-  u64 unsafe_counter = atoi(buffer);
-
+  
   u8  *fn = "";
   u8  hnb;
   s32 fd;
@@ -3193,7 +3182,7 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
     /* Keep only if there are new bits in the map, add to queue for
        future fuzzing, etc. */
 
-    if (!(hnb = has_new_bits(virgin_bits)) && unsafe_counter == 0) {
+    if (!(hnb = has_new_bits(virgin_bits))) {
       if (crash_mode) total_crashes++;
       return 0;
     }
@@ -3349,12 +3338,6 @@ keep_as_crash:
 
     default: return keeping;
 
-  }
-  
-  // [L0J0] we modify here to keep the seed if unsafe counter is >0
-  if (unsafe_counter > 0 && has_new_bits(virgin_bits) > 1) {
-
-     return keeping;
   }
 
   /* If we're here, we apparently want to save the crash or hang
@@ -4772,6 +4755,16 @@ static u32 choose_block_len(u32 limit) {
 
 static u32 calculate_score(struct queue_entry* q) {
 
+  // [L0J0] opens file and read from it to obtain counter value
+  fp = fopen("../weight.txt", "r+");
+  fread(buffer, 512, 1, fp);
+  fclose(fp);
+  fp = fopen("../weight.txt", "r+");
+  fputs("0", fp);
+  fclose(fp);
+
+  u64 unsafe_counter = atoi(buffer);
+
   u32 avg_exec_us = total_cal_us / total_cal_cycles;
   u32 avg_bitmap_size = total_bitmap_size / total_bitmap_entries;
   u32 perf_score = 100;
@@ -4797,6 +4790,12 @@ static u32 calculate_score(struct queue_entry* q) {
   else if (q->bitmap_size * 3 < avg_bitmap_size) perf_score *= 0.25;
   else if (q->bitmap_size * 2 < avg_bitmap_size) perf_score *= 0.5;
   else if (q->bitmap_size * 1.5 < avg_bitmap_size) perf_score *= 0.75;
+
+  //score tracking done via unsafe _counter
+  if (unsafe_counter == 0 ) perf_score *= 1;
+  else if (unsafe_counter < 5) perf_score *= 2;
+  else if (unsafe_counter > 5) perf_score *= 3;
+
 
   /* Adjust score based on handicap. Handicap is proportional to how late
      in the game we learned about this path. Latecomers are allowed to run
