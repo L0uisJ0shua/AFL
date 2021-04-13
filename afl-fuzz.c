@@ -916,18 +916,6 @@ EXP_ST void read_bitmap(u8* fname) {
 
 static inline u8 has_new_bits(u8* virgin_map) {
 
-  // [L0J0] opens file and read from it to obtain counter value
-  fp = fopen("../weight.txt",
-             "r+");
-  fread(buffer, 512, 1, fp);
-  fclose(fp);
-  fp = fopen("../weight.txt",
-             "r+");
-  fputs("0", fp);
-  fclose(fp);
-  
-  u64 unsafe_counter = atoi(buffer);
-
 #ifdef WORD_SIZE_64
 
   u64* current = (u64*)trace_bits;
@@ -990,10 +978,6 @@ static inline u8 has_new_bits(u8* virgin_map) {
   }
 
   if (ret && virgin_map == virgin_bits) bitmap_changed = 1;
-
-  if (unsafe_counter > 0 && ret != 2) {
-    ret = 1;
-  } 
 
   return ret;
 
@@ -3187,6 +3171,17 @@ static void write_crash_readme(void) {
    entry is saved, 0 otherwise. */
 
 static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+  // [L0J0] opens file and read from it to obtain counter value
+  fp = fopen("../weight.txt",
+             "r+");
+  fread(buffer, 512, 1, fp);
+  fclose(fp);
+  fp = fopen("../weight.txt",
+             "r+");
+  fputs("0", fp);
+  fclose(fp);
+
+  u64 unsafe_counter = atoi(buffer);
 
   u8  *fn = "";
   u8  hnb;
@@ -3198,10 +3193,10 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
     /* Keep only if there are new bits in the map, add to queue for
        future fuzzing, etc. */
 
-    if (!(hnb = has_new_bits(virgin_bits))) {
+    if (!(hnb = has_new_bits(virgin_bits)) && unsafe_counter == 0) {
       if (crash_mode) total_crashes++;
       return 0;
-    }    
+    }
 
 #ifndef SIMPLE_FILES
 
@@ -3354,6 +3349,12 @@ keep_as_crash:
 
     default: return keeping;
 
+  }
+  
+  // [L0J0] we modify here to keep the seed if unsafe counter is >0
+  if (unsafe_counter > 0 && has_new_bits(virgin_bits) > 1) {
+
+     return keeping;
   }
 
   /* If we're here, we apparently want to save the crash or hang
