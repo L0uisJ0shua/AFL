@@ -1340,8 +1340,12 @@ static void cull_queue(void) {
 
   q = queue;
 
+  // [L0J0] If input goes to unsafe code block, favour it
   while (q) {
     q->favored = 0;
+    if (q->unsafe_counter > 0) {
+      q->favored = 1;
+    }
     q = q->next;
   }
 
@@ -1361,6 +1365,8 @@ static void cull_queue(void) {
 
       top_rated[i]->favored = 1;
       queued_favored++;
+
+
 
       if (!top_rated[i]->was_fuzzed) pending_favored++;
 
@@ -4763,7 +4769,7 @@ static u32 calculate_score(struct queue_entry* q) {
   fputs("0", fp);
   fclose(fp);
 
-  u64 unsafe_counter = atoi(buffer);
+  q->unsafe_counter = atoi(buffer);
 
   u32 avg_exec_us = total_cal_us / total_cal_cycles;
   u32 avg_bitmap_size = total_bitmap_size / total_bitmap_entries;
@@ -4791,10 +4797,10 @@ static u32 calculate_score(struct queue_entry* q) {
   else if (q->bitmap_size * 2 < avg_bitmap_size) perf_score *= 0.5;
   else if (q->bitmap_size * 1.5 < avg_bitmap_size) perf_score *= 0.75;
 
-  //score tracking done via unsafe _counter
-  if (unsafe_counter == 0 ) perf_score *= 1;
-  else if (unsafe_counter < 5) perf_score *= 2;
-  else if (unsafe_counter > 5) perf_score *= 3;
+  // [L0J0] score tracking done via unsafe_counter
+  if (q->unsafe_counter == 0 ) perf_score *= 1;
+  else if (q->unsafe_counter <= 3) perf_score *= 2;
+  else if (q->unsafe_counter > 5) perf_score *= 3;
 
 
   /* Adjust score based on handicap. Handicap is proportional to how late
