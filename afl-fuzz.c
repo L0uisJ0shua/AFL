@@ -1340,19 +1340,15 @@ static void cull_queue(void) {
 
   q = queue;
 
-  // [L0J0] If input goes to unsafe code block, favour it
   while (q) {
     q->favored = 0;
-    if (q->unsafe_counter > 0) {
-      q->favored = 1;
-    }
     q = q->next;
   }
 
   /* Let's see if anything in the bitmap isn't captured in temp_v.
      If yes, and if it has a top_rated[] contender, let's use it. */
 
-  for (i = 0; i < MAP_SIZE; i++)
+  for (i = 0; i < MAP_SIZE; i++) 
     if (top_rated[i] && (temp_v[i >> 3] & (1 << (i & 7)))) {
 
       u32 j = MAP_SIZE >> 3;
